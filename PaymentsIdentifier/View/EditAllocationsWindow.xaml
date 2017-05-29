@@ -1,0 +1,89 @@
+﻿<Window x:Class="PaymentsIdentifier.View.EditAllocationsWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:local="clr-namespace:PaymentsIdentifier.View"
+        xmlns:model="clr-namespace:PaymentsIdentifier.Model"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:ClassModifier="internal"
+        Title="Payments Identifier Prototype - Edit Allocations" MinHeight="500" MinWidth="700" Closing="Window_Closing">
+    <Window.Resources>
+        <local:MatchedInvoicesToCountConverter x:Key="matchedInvoicesToCountConverter" />
+        <local:IsCollectionNullOrEmptyConverter x:Key="isCollectionNullOrEmptyConverter" />
+    </Window.Resources>
+    <Grid>
+        <DockPanel>
+            <WrapPanel DockPanel.Dock="Top" HorizontalAlignment="Center">
+                <ComboBox SelectedIndex="0" Margin="0,0,20,0">
+                    <ComboBox.ItemsSource>
+                        <CompositeCollection>
+                            <ListBoxItem>Country</ListBoxItem>
+                            <CollectionContainer />
+                        </CompositeCollection>
+                    </ComboBox.ItemsSource>
+                </ComboBox>
+                <ComboBox SelectedIndex="0" Margin="0,0,20,0">
+                    <ComboBox.ItemsSource>
+                        <CompositeCollection>
+                            <ListBoxItem>Collector</ListBoxItem>
+                            <CollectionContainer />
+                        </CompositeCollection>
+                    </ComboBox.ItemsSource>
+                </ComboBox>
+                <TextBlock Text="{Binding TotalPayments, StringFormat='Total: {0}'}" Margin="0,0,20,0" VerticalAlignment="Center" />
+                <TextBlock Text="{Binding FilteredPayments, StringFormat='Filtered: {0}'}" Margin="0,0,20,0" VerticalAlignment="Center" />
+                <TextBlock Text="{Binding MatchedPayments, StringFormat='Matched: {0}'}" Margin="0,0,20,0" VerticalAlignment="Center" />
+                <TextBlock Text="{Binding PaymentsWithoutComments, StringFormat='Without comments: {0}'}" Margin="0,0,20,0" VerticalAlignment="Center" />
+                <Button Content="Submit" Command="{Binding UpdateInvoiceListCommand}" CommandParameter="{Binding}" />
+            </WrapPanel>
+            <DataGrid x:Name="paymentsDataGrid" IsReadOnly="True" SelectionUnit="CellOrRowHeader" AutoGenerateColumns="False" CanUserAddRows="False" CanUserDeleteRows="False" CanUserResizeColumns="False" CanUserResizeRows="False" HorizontalGridLinesBrush="Gainsboro" VerticalGridLinesBrush="Gainsboro" ItemsSource="{Binding Payments}">
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="#" Width="auto" Binding="{Binding PaymentOrdinalNumber}" />
+                    <DataGridTextColumn Header="Country" Width="2*" MinWidth="80" Binding="{Binding Country}" />
+                    <DataGridTextColumn Header="Type" Width="*" MinWidth="40" Binding="{Binding Type}" />
+                    <DataGridTextColumn Header="Payment date" MinWidth="100" Width="2*" Binding="{Binding PaymentDate}" />
+                    <DataGridTextColumn Header="Value" MinWidth="60" Width="*" Binding="{Binding Value}">
+                        <DataGridTextColumn.CellStyle>
+                            <Style TargetType="DataGridCell">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding FinalMatchedInvoices, Converter={StaticResource isCollectionNullOrEmptyConverter}}" Value="False">
+                                        <Setter Property="Background" Value="LawnGreen" />
+                                        <Setter Property="FontWeight" Value="Bold" />
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding Status}" Value="{x:Static model:IdentifyStatus.IdentifiedByMatchingWithMultipleSameValues}">
+                                        <Setter Property="Background" Value="Violet" />
+                                        <Setter Property="FontWeight" Value="Bold" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </DataGridTextColumn.CellStyle>
+                    </DataGridTextColumn>
+                    <DataGridTextColumn Header="Document#" MinWidth="100" Width="2*" Binding="{Binding DocumentNumber}" />
+                    <DataGridTextColumn Header="Customer name" MinWidth="100" Width="2*" Binding="{Binding CustomerName}" />
+                    <DataGridTextColumn Header="Payments details" MinWidth="120" Width="3*" Binding="{Binding PaymentDetails}">
+                        <DataGridTextColumn.CellStyle>
+                            <Style TargetType="DataGridCell">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding Status}" Value="{x:Static model:IdentifyStatus.PartiallyIdentifiedByExtraction}">
+                                        <Setter Property="Background" Value="Goldenrod" />
+                                        <Setter Property="FontWeight" Value="Bold" />
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding Status}" Value="{x:Static model:IdentifyStatus.IdentifiedByExtraction}">
+                                        <Setter Property="Background" Value="LawnGreen" />
+                                        <Setter Property="FontWeight" Value="Bold" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </DataGridTextColumn.CellStyle>
+                    </DataGridTextColumn>
+                    <DataGridTemplateColumn Header="Add/Edit" MinWidth="55">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <Button Content="Add/Edit" Command="{Binding DataContext.InsertInputCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}" CommandParameter="{Binding}" />
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                    <DataGridTextColumn Header="Count" MinWidth="60" Width="*" Binding="{Binding MatchedInvoices, Converter={StaticResource matchedInvoicesToCountConverter}}" />
+                </DataGrid.Columns>
+            </DataGrid>
+        </DockPanel>
+    </Grid>
+</Window>

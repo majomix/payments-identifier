@@ -1,0 +1,241 @@
+﻿<Window x:Class="PaymentsIdentifier.View.InsertInputWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:i="http://schemas.microsoft.com/expression/2010/interactivity"
+        xmlns:local="clr-namespace:PaymentsIdentifier.View"
+        xmlns:model="clr-namespace:PaymentsIdentifier.Model"
+        xmlns:prism="http://www.codeplex.com/prism"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:system="clr-namespace:System;assembly=mscorlib"
+        x:ClassModifier="internal"
+        Title="Payments Identifier Prototype - Insert Accounts Receivable Input" MinHeight="500" MinWidth="1050" Width="1050" Closing="Window_Closing">
+    <Window.Resources>
+        <local:RowToIndexConverter x:Key="rowToIndexConverter" />
+        <local:PassArgumentsMultiValueConverter x:Key="passArgumentsMultiValueConverter" />
+        <local:IsCollectionNullOrEmptyConverter x:Key="isCollectionNullOrEmptyConverter" />
+        <local:IsRemainderZeroToBoolConverter x:Key="isRemainderZeroToBoolConverter" />
+        <system:Boolean x:Key="falseValue">False</system:Boolean>
+        <system:Boolean x:Key="trueValue">True</system:Boolean>
+    </Window.Resources>
+
+    <i:Interaction.Triggers>
+        <prism:InteractionRequestTrigger SourceObject="{Binding InsertInvoicesCommand.InteractionRequest}">
+            <local:PopupWindowAction>
+                <local:PopupWindowAction.ContentTemplate>
+                    <DataTemplate>
+                        <TextBox Width="600" Height="300" AcceptsReturn="True" AcceptsTab="True" Text="{Binding UserInput}" />
+                    </DataTemplate>
+                </local:PopupWindowAction.ContentTemplate>
+            </local:PopupWindowAction>
+        </prism:InteractionRequestTrigger>
+    </i:Interaction.Triggers>
+    
+    <Grid>
+        <DockPanel>
+            <DockPanel DockPanel.Dock="Top" Height="120" LastChildFill="False">
+                <StackPanel DockPanel.Dock="Top" HorizontalAlignment="Center">
+                    <ComboBox ItemsSource="{Binding AllPayments}" SelectedItem="{Binding SelectedPayment}" HorizontalAlignment="Center">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock>
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding FinalMatchedInvoices, Converter={StaticResource isCollectionNullOrEmptyConverter}}" Value="False">
+                                                    <Setter Property="Background" Value="LawnGreen" />
+                                                    <Setter Property="FontWeight" Value="Bold" />
+                                                </DataTrigger>
+                                                <DataTrigger Binding="{Binding Status}" Value="{x:Static model:IdentifyStatus.IdentifiedByMatchingWithMultipleSameValues}">
+                                                    <Setter Property="Background" Value="Violet" />
+                                                    <Setter Property="FontWeight" Value="Bold" />
+                                                </DataTrigger>
+                                                <DataTrigger Binding="{Binding Status}" Value="{x:Static model:IdentifyStatus.PartiallyIdentifiedByExtraction}">
+                                                    <Setter Property="Background" Value="Goldenrod" />
+                                                    <Setter Property="FontWeight" Value="Bold" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                    <TextBlock.Text>
+                                        <MultiBinding StringFormat="{}{0} | {1} | {2}">
+                                            <Binding Path="PaymentOrdinalNumber" />
+                                            <Binding Path="CustomerName" />
+                                            <Binding Path="Value" />
+                                        </MultiBinding>
+                                    </TextBlock.Text>
+                                </TextBlock>
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
+                    <WrapPanel HorizontalAlignment="Center">
+                        <Button Content="Previous payment" Command="{Binding SelectAdjacentPaymentCommand}">
+                            <Button.CommandParameter>
+                                <MultiBinding Converter="{StaticResource passArgumentsMultiValueConverter}">
+                                    <Binding Path="SelectedPayment" />
+                                    <Binding>
+                                        <Binding.Source>
+                                            <system:Boolean>False</system:Boolean>
+                                        </Binding.Source>
+                                    </Binding>
+                                    <Binding Path="IncludeResolved" />
+                                </MultiBinding>
+                            </Button.CommandParameter>
+                        </Button>
+                        <Button Content="Next payment" Command="{Binding SelectAdjacentPaymentCommand}">
+                            <Button.CommandParameter>
+                                <MultiBinding Converter="{StaticResource passArgumentsMultiValueConverter}">
+                                    <Binding Path="SelectedPayment" />
+                                    <Binding>
+                                        <Binding.Source>
+                                            <system:Boolean>True</system:Boolean>
+                                        </Binding.Source>
+                                    </Binding>
+                                    <Binding Path="IncludeResolved" />
+                                </MultiBinding>
+                            </Button.CommandParameter>
+                        </Button>
+                        <CheckBox Content="Include resolved" IsChecked="{Binding IncludeResolved}" />
+                        <Button Content="Save" />
+                    </WrapPanel>
+                </StackPanel>
+                <StackPanel DockPanel.Dock="Left" HorizontalAlignment="Left" Margin="5,0,0,0" Width="340">
+                    <TextBlock Text="{Binding SelectedPayment.Value, StringFormat='Payment value: {0}'}" />
+                    <TextBlock Text="{Binding SelectedPayment.CustomerName, StringFormat='Sender: {0}'}" />
+                    <TextBlock Text="{Binding SelectedPayment.PaymentDate, StringFormat='Payment date: {0}'}" />
+                </StackPanel>
+                <StackPanel DockPanel.Dock="Right" HorizontalAlignment="Right" Margin="0,0,5,0" Width="340">
+                    <TextBlock Text="{Binding SelectedPayment.Country, StringFormat='Country: {0}'}" HorizontalAlignment="Right" />
+                    <TextBlock Text="{Binding SelectedPayment.Type, StringFormat='Type: {0}'}"  HorizontalAlignment="Right" />
+                    <TextBlock Text="{Binding SelectedPayment.DocumentNumber, StringFormat='Document number: {0}'}" HorizontalAlignment="Right" />
+                </StackPanel>
+                <StackPanel DockPanel.Dock="Bottom" HorizontalAlignment="Center">
+                    <TextBlock HorizontalAlignment="Center">
+                        <TextBlock.Text>
+                            <MultiBinding StringFormat="Match {0} out of {1}" FallbackValue="Match 0 out of 0" TargetNullValue="Match 0 out of 0">
+                                <Binding Path="SelectedMatchedListIndex" />
+                                <Binding Path="SelectedPayment.MatchedInvoices.Count" />
+                            </MultiBinding>
+                        </TextBlock.Text>
+                    </TextBlock>
+                    <WrapPanel>
+                        <Button Content="Previous match" Command="{Binding SelectAdjacentMatchedListCommand}">
+                            <Button.CommandParameter>
+                                <MultiBinding Converter="{StaticResource passArgumentsMultiValueConverter}">
+                                    <Binding Path="SelectedPayment" />
+                                    <Binding Path="SelectedMatchedList" />
+                                    <Binding>
+                                        <Binding.Source>
+                                            <system:Boolean>False</system:Boolean>
+                                        </Binding.Source>
+                                    </Binding>
+                                </MultiBinding>
+                            </Button.CommandParameter>
+                        </Button>
+                        <Button Content="Next match" Command="{Binding SelectAdjacentMatchedListCommand}">
+                            <Button.CommandParameter>
+                                <MultiBinding Converter="{StaticResource passArgumentsMultiValueConverter}">
+                                    <Binding Path="SelectedPayment" />
+                                    <Binding Path="SelectedMatchedList" />
+                                    <Binding>
+                                        <Binding.Source>
+                                            <system:Boolean>True</system:Boolean>
+                                        </Binding.Source>
+                                    </Binding>
+                                </MultiBinding>
+                            </Button.CommandParameter>
+                        </Button>
+                        <Button Content="Insert invoices" Command="{Binding InsertInvoicesCommand}">
+                            <Button.CommandParameter>
+                                <MultiBinding Converter="{StaticResource passArgumentsMultiValueConverter}">
+                                    <Binding Path="SelectedPayment.MatchedInvoices" />
+                                    <Binding Path="SelectedMatchedList" />
+                                </MultiBinding>
+                            </Button.CommandParameter>
+                        </Button>
+                        <Button Content="Set as matched" Command="{Binding SetAsMatchedCommand}">
+                            <Button.CommandParameter>
+                                <MultiBinding Converter="{StaticResource passArgumentsMultiValueConverter}">
+                                    <Binding Path="SelectedPayment" />
+                                    <Binding Path="SelectedMatchedList" />
+                                </MultiBinding>
+                            </Button.CommandParameter>
+                        </Button>
+                    </WrapPanel>
+                </StackPanel>
+            </DockPanel>
+            <Grid DockPanel.Dock="Bottom" Height="80">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="110" />
+                    <ColumnDefinition Width="150" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                    <TextBlock Text="Bank fees:" />
+                    <TextBox Text="{Binding SelectedPayment.BankFees}" />
+                </StackPanel>
+                <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Grid.Column="1">
+                    <TextBlock Text="Penny elimination:" />
+                    <TextBox Text="{Binding SelectedPayment.PennyElimination}" />
+                </StackPanel>
+                <DockPanel Grid.Column="2">
+                    <TextBlock DockPanel.Dock="Top" Text="Collector's commentary:" HorizontalAlignment="Center" />
+                    <TextBox Text="{Binding SelectedPayment.Commentary}" />
+                </DockPanel>
+            </Grid>
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+                <DockPanel>
+                    <TextBlock DockPanel.Dock="Left" Text="{Binding NumberOfInvoices, StringFormat='Number of invoices: {0}'}" Margin="5,0,0,0" />
+                    <TextBlock DockPanel.Dock="Right" HorizontalAlignment="Right" Margin="0,0,5,0">
+                        <TextBlock.Text>
+                            <MultiBinding StringFormat="Total value of invoices: {0} ({1} remaining)">
+                                <Binding Path="ValueOfInvoices" />
+                                <Binding Path="Remainder" />
+                            </MultiBinding>
+                        </TextBlock.Text>
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding Remainder, Converter={StaticResource isRemainderZeroToBoolConverter}}" Value="True">
+                                        <Setter Property="Foreground" Value="Green" />
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding Remainder, Converter={StaticResource isRemainderZeroToBoolConverter}}" Value="False">
+                                        <Setter Property="Foreground" Value="Goldenrod" />
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding Remainder}" Value="-">
+                                        <Setter Property="Foreground" Value="Black" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+                </DockPanel>
+                <DataGrid Grid.Row="1" CanUserAddRows="False" SelectionUnit="Cell" AutoGenerateColumns="False" ItemsSource="{Binding SelectedMatchedList}" HorizontalGridLinesBrush="Gainsboro" VerticalGridLinesBrush="Gainsboro">
+                    <DataGrid.ContextMenu>
+                        <ContextMenu>
+                            <MenuItem Header="Edit" />
+                            <MenuItem Header="Copy" />
+                            <MenuItem Header="Delete" />
+                            <MenuItem Header="Select all" />
+                        </ContextMenu>
+                    </DataGrid.ContextMenu>
+                    <DataGrid.Columns>
+                        <DataGridTextColumn IsReadOnly="True" Header="#" Binding="{Binding RelativeSource={RelativeSource AncestorType=DataGridRow}, Converter={StaticResource rowToIndexConverter}}" />
+                        <DataGridTextColumn IsReadOnly="True" Header="Customer identifier" Width="*" Binding="{Binding CustomerNumber}" />
+                        <DataGridTextColumn IsReadOnly="True" Header="Customer name" Width="3*" Binding="{Binding CustomerName}" />
+                        <DataGridTextColumn Header="Invoice number" Width="*" Binding="{Binding InvoiceNumber}">
+                            <i:Interaction.Triggers>
+                                <i:EventTrigger EventName="TargetUpdated">
+                                    <i:InvokeCommandAction Command="{Binding UpdateInvoiceListCommand}" CommandParameter="{}" />
+                                </i:EventTrigger>
+                            </i:Interaction.Triggers>
+                        </DataGridTextColumn>
+                        <DataGridTextColumn IsReadOnly="True" Header="Value" Width="*" Binding="{Binding Value}" />
+                    </DataGrid.Columns>
+                </DataGrid>
+            </Grid>
+        </DockPanel>
+    </Grid>
+</Window>

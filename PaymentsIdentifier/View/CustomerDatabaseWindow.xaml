@@ -1,0 +1,84 @@
+﻿<Window x:Class="PaymentsIdentifier.View.CustomerDatabaseWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:local="clr-namespace:PaymentsIdentifier.View"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:ClassModifier="internal"
+        Title="Payments Identifier Prototype - Edit Customer Database" MinHeight="500" MinWidth="1050" Width="1050" Closing="Window_Closing">
+    <Window.Resources>
+        <local:RowToIndexConverter x:Key="rowToIndexConverter" />
+        <local:CustomerIdentifiersToListConverter x:Key="customerIdentifiersToListConverter" />
+        <local:CustomerIdentifiersToListConverter x:Key="customerIdentifiersToListConverter2" />
+    </Window.Resources>
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="auto" />
+            <RowDefinition />
+        </Grid.RowDefinitions>
+        <DockPanel Grid.Row="0">
+            <WrapPanel DockPanel.Dock="Top" HorizontalAlignment="Center">
+                <ComboBox SelectedIndex="0" Margin="0,0,20,0">
+                    <ComboBox.ItemsSource>
+                        <CompositeCollection>
+                            <ListBoxItem>Country</ListBoxItem>
+                            <CollectionContainer />
+                        </CompositeCollection>
+                    </ComboBox.ItemsSource>
+                </ComboBox>
+                <ComboBox SelectedIndex="0" Margin="0,0,20,0">
+                    <ComboBox.ItemsSource>
+                        <CompositeCollection>
+                            <ListBoxItem>Collector</ListBoxItem>
+                            <CollectionContainer />
+                        </CompositeCollection>
+                    </ComboBox.ItemsSource>
+                </ComboBox>
+                <Button Content="Save to file" Command="{Binding SaveCustomerDatabaseCommand}" />
+            </WrapPanel>
+            <GroupBox Header="Add new customer" Grid.Row="0" Name="groupBox1">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition />
+                        <RowDefinition />
+                        <RowDefinition />
+                        <RowDefinition />
+                    </Grid.RowDefinitions>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="7*" />
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Text="Name:" Grid.Row="0" Grid.Column="0" VerticalAlignment="Center" />
+                    <TextBox Text="{Binding NewCustomer.Name}" Grid.Row="0" Grid.Column="1" VerticalAlignment="Center" />
+                    <TextBlock Text="Identifiers:" Grid.Row="1" Grid.Column="0" VerticalAlignment="Center" />
+                    <TextBox Grid.Row="1" Grid.Column="1" VerticalAlignment="Center">
+                        <TextBox.Text>
+                             <MultiBinding Converter="{StaticResource customerIdentifiersToListConverter}">
+                                <Binding Path="NewCustomer.Identifiers" />
+                                <Binding Path="NewCustomer.Identifiers.Count" Mode="OneWay" />
+                             </MultiBinding>
+                        </TextBox.Text>
+                    </TextBox>
+                    <TextBlock Text="Country:" Grid.Row="2" Grid.Column="0" VerticalAlignment="Center" />
+                    <ComboBox Grid.Row="2" Grid.Column="1" ItemsSource="{Binding AvailableCountries}" SelectedItem="{Binding NewCustomer.Country}" DisplayMemberPath="Name" VerticalAlignment="Center" />
+
+                    <Button Content="Add" Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="2" Command="{Binding AddCustomerCommand}" CommandParameter="{Binding NewCustomer}" />
+                </Grid>
+            </GroupBox>
+        </DockPanel>
+        <DataGrid Grid.Row="1" CanUserAddRows="False" SelectionUnit="Cell" AutoGenerateColumns="False" ItemsSource="{Binding Customers}" HorizontalGridLinesBrush="Gainsboro" VerticalGridLinesBrush="Gainsboro">
+            <DataGrid.Columns>
+                <DataGridTextColumn IsReadOnly="True" Header="#" Binding="{Binding RelativeSource={RelativeSource AncestorType=DataGridRow}, Converter={StaticResource rowToIndexConverter}}" />
+                <DataGridTextColumn IsReadOnly="True" Header="Customer name" Width="3*" Binding="{Binding Name}" />
+                <DataGridTextColumn IsReadOnly="True" Header="Customer identifiers" Width="2*">
+                    <DataGridTextColumn.Binding>
+                        <MultiBinding Converter="{StaticResource customerIdentifiersToListConverter2}">
+                            <Binding Path="Identifiers" />
+                            <Binding Path="Identifiers.Count" Mode="OneWay" />
+                        </MultiBinding>
+                    </DataGridTextColumn.Binding>
+                </DataGridTextColumn>
+                    <DataGridTextColumn IsReadOnly="True" Header="Country" Width="*" Binding="{Binding Country.Name}" />
+                <DataGridTextColumn IsReadOnly="True" Header="Region" Width="*" Binding="{Binding Country.Region}" />
+            </DataGrid.Columns>
+        </DataGrid>
+    </Grid>
+</Window>
